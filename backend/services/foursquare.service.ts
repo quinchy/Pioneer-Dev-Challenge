@@ -48,12 +48,16 @@ export async function findRestaurants(params: ParseMessageParams) {
       | FoursquareErrorResponse;
 
     if (!response.ok) {
+      const detail =
+        "message" in data && typeof data.message === "string"
+          ? data.message
+          : undefined;
+
       throw new AppError(
         response.status,
         "FOURSQUARE_REQUEST_FAILED",
-        "message" in data && typeof data.message === "string"
-          ? data.message
-          : "Foursquare request failed.",
+        "Foursquare request failed.",
+        detail,
       );
     }
 
@@ -67,6 +71,7 @@ export async function findRestaurants(params: ParseMessageParams) {
       502,
       "FOURSQUARE_NETWORK_ERROR",
       "Failed to connect to Foursquare Places API.",
+      error instanceof Error ? error.message : undefined,
     );
   }
 }

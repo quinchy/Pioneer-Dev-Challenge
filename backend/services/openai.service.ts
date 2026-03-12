@@ -104,6 +104,7 @@ export async function parseMessage(
           503,
           "LLM_RATE_LIMITED",
           "Message parsing is temporarily unavailable. Please try again later or contact the developer.",
+          error.message,
         );
       }
 
@@ -120,6 +121,7 @@ export async function parseMessage(
         500,
         "LLM_INVALID_JSON",
         "The AI response was not valid JSON.",
+        error.message,
       );
     }
 
@@ -127,6 +129,7 @@ export async function parseMessage(
       500,
       "INTERNAL_SERVER_ERROR",
       "An unexpected server error occurred.",
+      error instanceof Error ? error.message : undefined,
     );
   }
 }

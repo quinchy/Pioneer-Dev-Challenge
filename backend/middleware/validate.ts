@@ -9,6 +9,10 @@ export function validate(schema: z.ZodSchema) {
       return res.status(400).json({
         success: false,
         message: "Invalid query parameters",
+        error: {
+          code: "VALIDATION_ERROR",
+          detail: "Query validation failed.",
+        },
         errors: result.error.issues,
       });
     }

@@ -13,6 +13,7 @@ export function errorHandler(
       message: err.message,
       error: {
         code: err.code,
+        detail: err.detail,
       },
     });
   }
@@ -24,6 +25,7 @@ export function errorHandler(
     message: "An unexpected error occurred.",
     error: {
       code: "INTERNAL_SERVER_ERROR",
+      detail: err instanceof Error ? err.message : undefined,
     },
   });
 }
