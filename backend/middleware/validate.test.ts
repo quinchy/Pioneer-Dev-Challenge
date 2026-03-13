@@ -41,7 +41,10 @@ describe("validate middleware", () => {
       expect.objectContaining({
         success: false,
         message: "Invalid query parameters",
-        errors: expect.any(Array),
+        error: {
+          code: "VALIDATION_ERROR",
+          detail: "Query validation failed.",
+        },
       }),
     );
     expect(mockNext).not.toHaveBeenCalled();
