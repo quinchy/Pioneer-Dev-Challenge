@@ -23,25 +23,23 @@ bun install
 
 ## Environment configuration
 
-Create a `.env` file in the `backend` directory (you can start from `.env.example` if present) and set:
+Create a `.env` file in the `backend` directory (you can start from `.env.example`) and set:
 
 - `PORT` (optional, default `3001`)
 - `API_CODE` – shared code required on each request (must match frontend and challenge spec)
 - `OPENAI_API_KEY` – OpenAI API key for message parsing
-- `OPENAI_MODEL` – OpenAI model name (defaults to `gpt-4.1-mini` if not set)
+- `OPENAI_MODEL` – OpenAI model name (defaults to `gpt-4.1-mini`)
 - `FOURSQUARE_API_KEY` – Foursquare Places API key
 
 Example:
 
 ```env
 PORT=3001
-API_CODE=pioneerdevai
+API_CODE=pioneer
 OPENAI_API_KEY=sk-xxx
 OPENAI_MODEL=gpt-4.1-mini
 FOURSQUARE_API_KEY=fsq-xxx
 ```
-
-Secrets are only read from environment variables; nothing is hard-coded.
 
 ---
 
@@ -60,7 +58,7 @@ The API will listen on `http://localhost:<PORT>` (default `http://localhost:3001
 
 ## API endpoint and how to test it
 
-**Required route (per challenge spec)**
+**API Route**
 
 ```text
 GET /api/execute?message=<your_query>&code=pioneerdevai
@@ -69,7 +67,7 @@ GET /api/execute?message=<your_query>&code=pioneerdevai
 **Example local request**
 
 ```bash
-curl "http://localhost:3001/api/execute?message=Find%20me%20a%20cheap%20sushi%20restaurant%20in%20downtown%20Los%20Angeles%20that%27s%20open%20now&code=pioneerdevai"
+curl "http://localhost:3001/api/execute?message=Find%20me%20a%20cheap%20sushi%20restaurant%20in%20downtown%20Los%20Angeles%20that%27s%20open%20now&code=pioneer"
 ```
 
 High-level behavior:
@@ -99,33 +97,30 @@ cd backend
 bun run test
 ```
 
-**What is tested**
+**Testing**
 
-- **Validation & parsing**
-  - `execute` query schema (`message` validation)
-  - OpenAI / search-parameter schema (price ranges, `min_price`/`max_price`, etc.)
-  - Environment variable validation (`API_CODE`, `OPENAI_API_KEY`, `FOURSQUARE_API_KEY`, defaults)
-- **Middleware**
-  - `auth` middleware (validation of the `code` parameter, 401 behavior)
-  - `validate` middleware (query validation and 400 error shape)
-  - `error-handler` middleware (handling of `AppError` and unknown errors -> 500)
-- **Utilities**
-  - `AppError` behavior and structure
-  - `logger` methods (info/error/warn/debug)
-- **Foursquare service**
-  - `findRestaurants` error handling when the Places API returns a non-OK response
-  - `findRestaurants` happy-path behavior (returns parsed data from a mocked `fetch`)
-- **Route-level**
-  - `/api/execute` happy-path flow using mocked OpenAI and Foursquare services, asserting a `200` response with restaurant data
-
-**Intentionally not covered**
-
-- Full end-to-end tests against the real OpenAI or Foursquare APIs
-- Broader HTTP routing beyond the `/api/execute` endpoint
-- Frontend/UI behavior (covered in the frontend project, not here)
+- **Validation of the `code` parameter**
+  - `middleware/auth.test.ts` – ensures `code` must equal `API_CODE` and returns `401` when invalid.
+- **Parsing / validation of structured search parameters**
+  - `validation/openai.test.ts` – tests the schema for parsed search parameters (price range, sort, etc.).
+  - `validation/execute.test.ts` – validates the `message` query for the `/api/execute` endpoint.
+- **Backend validation and error handling**
+  - `validation/env.test.ts` – validates required environment variables and defaults.
+  - `middleware/validate.test.ts` – checks query validation and the 400 response shape.
+  - `middleware/error-handler.test.ts` – verifies `AppError` and unknown errors produce the correct JSON error responses.
+- **Foursquare result behavior**
+  - `services/foursquare.service.test.ts` – covers happy-path parsing of Foursquare results and error handling when the upstream API fails.
+- **Main request flow**
+  - `controllers/execute.controller.test.ts` – exercises the controller that parses the message and calls the Foursquare service, asserting a `200` success response.
 
 ---
 
-This project was created using `bun init` in bun v1.3.9.  
-[Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+## Backend structure (high level)
 
+- **Routes (`routes/`)**: Wire HTTP paths (e.g. `/api/execute`) to middleware and controllers, keeping framework-specific concerns (Express/router) isolated.
+- **Controllers (`controllers/`)**: Contain the main request flow logic (e.g. parse message → call Foursquare → send response) without knowing about routing details.
+- **Services (`services/`)**: Encapsulate external integrations and core business logic such as OpenAI parsing and Foursquare API calls, making them easier to mock and reason about.
+- **Middleware (`middleware/`)**: Reusable request/response cross‑cutting concerns like auth, validation, logging, and centralized error handling; this keeps controllers and services focused on business logic.
+- **Utils (`utils/`)**: Small, framework-agnostic helpers such as logging and `sendResponse` that are shared across the backend.
+- **Validation (`validation/`)**: Zod schemas for environment variables, query parameters, and parsed OpenAI/Foursquare data, ensuring everything is validated before it reaches services.
+- **Types (`types/`, or co-located types)**: Shared TypeScript types for structured search parameters and API responses, so controllers, services, and validation can agree on a single, type‑safe contract.
