@@ -1,12 +1,11 @@
 {
     "version": 2,
     "buildCommand": "bun run build",
-    "builds": [
-      {
-        "src": "dist/server.js",
-        "use": "@vercel/node"
+    "functions": {
+      "dist/server.js": {
+        "runtime": "nodejs20.x"
       }
-    ],
+    },
     "routes": [
       {
         "src": "/(.*)",
