@@ -5,7 +5,7 @@
     "lib": ["ES2022"],
 
     /* Node module system */
-    "module": "ESNext",
+    "module": "CommonJS",
     "moduleResolution": "node",
 
     /* Build output */
