@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --watch server.ts",
+    "dev": "bun --watch dev.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
