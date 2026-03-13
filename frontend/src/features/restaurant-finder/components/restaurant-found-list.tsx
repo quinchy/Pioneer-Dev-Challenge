@@ -1,13 +1,27 @@
-import { FindRestaurantsSuccessResponse, FoursquarePlace } from "../types/restaurant-finder";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  type FindRestaurantsSuccessResponse,
+  type FoursquarePlace,
+} from "@/features/restaurant-finder/types/restaurant-finder";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-
-interface RestaurantFoundListProps {
-  restaurants?: FindRestaurantsSuccessResponse;
-  isPending?: boolean;
-  isError?: boolean;
-  error?: Error | null;
-}
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  SpoonAndForkIcon,
+  Alert02Icon,
+  Location03Icon,
+  VanIcon,
+  Call02Icon,
+  Globe02Icon,
+  UnavailableIcon,
+} from "@hugeicons/core-free-icons";
+import Link from "next/link";
 
 function RestaurantCard({ restaurant }: { restaurant: FoursquarePlace }) {
   const categoryNames = restaurant.categories
@@ -17,97 +31,152 @@ function RestaurantCard({ restaurant }: { restaurant: FoursquarePlace }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{restaurant.name || "Unnamed Restaurant"}</CardTitle>
+        <CardTitle className="font-bold text-lg">
+          {restaurant.name || "Unnamed Restaurant"}
+        </CardTitle>
         {categoryNames && (
-          <CardDescription>{categoryNames}</CardDescription>
+          <CardDescription className="italic">{categoryNames}</CardDescription>
         )}
       </CardHeader>
       <CardContent>
         {restaurant.location && (
           <div className="space-y-1">
             {restaurant.location.formatted_address && (
-              <p className="text-sm text-muted-foreground">
-                {restaurant.location.formatted_address}
-              </p>
-            )}
-            {restaurant.location.locality && restaurant.location.region && (
-              <p className="text-sm text-muted-foreground">
-                {restaurant.location.locality}, {restaurant.location.region}
+              <p className="text-sm text-muted-foreground flex flex-row items-center">
+                <HugeiconsIcon
+                  icon={Location03Icon}
+                  size={16}
+                  color="currentColor"
+                  strokeWidth={1.5}
+                  className="shrink-0"
+                />
+                <span className="ml-2">
+                  {restaurant.location.formatted_address}
+                </span>
               </p>
             )}
             {restaurant.distance && (
-              <p className="text-sm text-muted-foreground">
-                {restaurant.distance}m away
+              <p className="text-sm text-muted-foreground flex flex-row items-center">
+                <HugeiconsIcon
+                  icon={VanIcon}
+                  size={16}
+                  color="currentColor"
+                  strokeWidth={1.5}
+                />
+                <span className="ml-2">{restaurant.distance}m away</span>
               </p>
             )}
           </div>
         )}
-        {restaurant.tel && (
-          <p className="text-sm mt-2">
-            <strong>Phone:</strong> {restaurant.tel}
-          </p>
-        )}
-        {restaurant.website && (
-          <p className="text-sm mt-2">
-            <strong>Website:</strong>{" "}
-            <a
+      </CardContent>
+      {restaurant.tel && restaurant.website && (
+        <CardFooter className="grid grid-cols-2 bg-muted py-2 rounded-none">
+          {restaurant.tel && (
+            <p className="text-sm flex flex-row items-center">
+              <HugeiconsIcon
+                icon={Call02Icon}
+                size={16}
+                color="currentColor"
+                strokeWidth={1.5}
+              />
+              <span className="ml-2 font-mono">{restaurant.tel}</span>
+            </p>
+          )}
+          {restaurant.website && (
+            <Link
               href={restaurant.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:underline"
+              className="text-sm flex flex-row items-center col-start-2 justify-end hover:underline font-bold"
             >
-              {restaurant.website}
-            </a>
-          </p>
-        )}
-      </CardContent>
+              <HugeiconsIcon
+                icon={Globe02Icon}
+                size={16}
+                color="currentColor"
+                strokeWidth={1.5}
+              />
+              <span className="ml-2">Visit Website</span>
+            </Link>
+          )}
+        </CardFooter>
+      )}
     </Card>
   );
 }
 
-export default function RestaurantFoundList({
-  restaurants,
-  isPending = false,
-  isError = false,
-  error = null,
-}: RestaurantFoundListProps) {
-  if (isPending) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8">
-        <Spinner className="size-8 mb-2" />
-        <p className="text-muted-foreground">Finding restaurants...</p>
-      </div>
-    );
-  }
+export function RestaurantInitial() {
+  return (
+    <div className="text-center text-muted-foreground text-sm flex flex-col items-center justify-center gap-5 max-w-md mx-auto">
+      <HugeiconsIcon
+        icon={SpoonAndForkIcon}
+        size={30}
+        color="currentColor"
+        strokeWidth={1.5}
+      />
+      Your next meal is one search away. Try something like: “Find me a good
+      ramen place in Makati open now”
+    </div>
+  );
+}
 
-  if (isError) {
-    return (
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle className="text-destructive">Error</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-destructive">
-            {error?.message || "An error occurred while finding restaurants."}
+export function RestaurantFoundListLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center py-8">
+      <Spinner className="size-8 mb-2" />
+      <p className="text-muted-foreground">Searching for the best spots…</p>
+    </div>
+  );
+}
+
+export function RestaurantFoundListError({
+  title,
+  description,
+}: {
+  title?: string;
+  description?: string;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-5 max-w-md mx-auto text-destructive">
+      <HugeiconsIcon
+        icon={Alert02Icon}
+        size={30}
+        color="currentColor"
+        strokeWidth={1.5}
+      />
+      <section>
+        <h1 className="text-2xl font-bold">{title || "An error occurred"}</h1>
+        {description && (
+          <p className="text-center text-sm text-destructive/75">
+            {description}
           </p>
-        </CardContent>
-      </Card>
-    );
-  }
+        )}
+      </section>
+    </div>
+  );
+}
 
-  if (!restaurants || restaurants.results.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">
-          No restaurants found. Try a different search.
-        </CardContent>
-      </Card>
-    );
-  }
+export function RestaurantNoList() {
+  return (
+    <div className="text-center text-muted-foreground text-sm flex flex-col items-center justify-center gap-5 max-w-md mx-auto">
+      <HugeiconsIcon
+        icon={UnavailableIcon}
+        size={30}
+        color="currentColor"
+        strokeWidth={1.5}
+      />
+      No available restaurants found. Try searching for different area or changing your request.
+    </div>
+  );
+}
 
+export function RestaurantFoundList({
+  restaurants,
+}: {
+  restaurants?: FindRestaurantsSuccessResponse;
+}) {
   return (
     <div className="grid gap-4">
-      {restaurants.results.map((restaurant, index) => (
+      {restaurants?.results.map((restaurant, index) => (
         <RestaurantCard key={index} restaurant={restaurant} />
       ))}
     </div>

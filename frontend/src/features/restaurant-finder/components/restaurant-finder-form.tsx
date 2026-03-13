@@ -5,34 +5,31 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   restaurantFinderSchema,
   type RestaurantFinderFormData,
-} from "../types/restaurant-finder";
+} from "@/features/restaurant-finder/types/restaurant-finder";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Search02Icon } from "@hugeicons/core-free-icons";
+import { findRestaurants } from "@/features/restaurant-finder/apis/restaurant-finder";
+import { useRestaurantFinderStore } from "@/features/restaurant-finder/store/restaurant-finder-store";
 
-interface RestaurantFinderFormProps {
-  onSubmit: (data: RestaurantFinderFormData) => void;
-  isPending?: boolean;
-}
-
-export default function RestaurantFinderForm({
-  onSubmit,
-  isPending = false,
-}: RestaurantFinderFormProps) {
-  const { control, handleSubmit } = useForm<RestaurantFinderFormData>({
+export default function RestaurantFinderForm() {
+  const setResult = useRestaurantFinderStore((state) => state.setResult);
+  const setIsLoading = useRestaurantFinderStore((state) => state.setIsLoading);
+  const { control, handleSubmit, formState: { isSubmitting } } = useForm<RestaurantFinderFormData>({
     resolver: zodResolver(restaurantFinderSchema),
     defaultValues: {
       message: "",
     },
   });
+
+  const onSubmit = async (data: RestaurantFinderFormData) => {
+    setIsLoading(true);
+    const result = await findRestaurants(data.message);
+    setIsLoading(false);
+    setResult(result);
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -41,41 +38,25 @@ export default function RestaurantFinderForm({
         control={control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>Message</FieldLabel>
+            <div className="flex flex-row items-center justify-between">
+              <FieldLabel htmlFor={field.name}>Your Message</FieldLabel>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </div>
 
             <Textarea
               {...field}
               id={field.name}
-              placeholder="Find me a restaurant in New York"
-              disabled={isPending}
+              placeholder="Describe the restaurant you want"
+              disabled={isSubmitting}
               aria-invalid={fieldState.invalid}
             />
-
-            <FieldDescription>
-              Describe the restaurant you want in natural language.
-            </FieldDescription>
-
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
         )}
       />
 
-      <Button type="submit" disabled={isPending} className="mt-4 w-full">
-        {isPending ? (
-          <>
-            <Spinner className="size-4" />
-            Finding Restaurant...
-          </>
-        ) : (
-          <>
-            <HugeiconsIcon
-              icon={Search02Icon}
-              strokeWidth={2}
-              className="size-4"
-            />
-            Search Restaurants
-          </>
-        )}
+      <Button type="submit" className="mt-4 w-full" disabled={isSubmitting}>
+        <HugeiconsIcon icon={Search02Icon} strokeWidth={2} className="size-4" />
+        Search Restaurants
       </Button>
     </form>
   );
