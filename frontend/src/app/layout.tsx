@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Figtree } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { TanstackQueryProvider } from "@/components/providers/tanstack-query-provider";
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -17,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pioneer Dev Challenge",
+  title: "Restaurant Finder",
   description: "Pioneer Dev Challenge - Restaurant Finder Frontend",
 };
 
@@ -29,9 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", figtree.variable)}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slant`}
       >
-        <TanstackQueryProvider>{children}</TanstackQueryProvider>
+        {children}
       </body>
     </html>
   );
