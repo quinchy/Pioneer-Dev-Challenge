@@ -2,7 +2,18 @@ import {
   ExecuteApiResponse,
   ExecuteApiSuccess,
   FindRestaurantsSuccessResponse,
+  ApiError,
 } from "../types/restaurant-finder";
+
+export class ApiErrorWithDetail extends Error {
+  detail?: string;
+
+  constructor(message: string, detail?: string) {
+    super(message);
+    this.name = "ApiErrorWithDetail";
+    this.detail = detail;
+  }
+}
 
 export const findRestaurants = async (
   message: string,
@@ -16,7 +27,11 @@ export const findRestaurants = async (
   const result: ExecuteApiResponse = await response.json();
 
   if (!result.success) {
-    throw new Error(result.error.detail);
+    const errorResult = result as ApiError;
+    throw new ApiErrorWithDetail(
+      errorResult.message,
+      errorResult.error.detail,
+    );
   }
 
   const successResult = result as ExecuteApiSuccess;

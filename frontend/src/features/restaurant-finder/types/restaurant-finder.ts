@@ -1,3 +1,15 @@
+import { z } from "zod";
+
+export const restaurantFinderSchema = z.object({
+  message: z.string().min(1, "Message is required"),
+});
+
+export type RestaurantFinderFormData = z.infer<typeof restaurantFinderSchema>;
+
+export type RestaurantFinderFormDataWithMessage = {
+  message: string;
+};
+
 type FoursquareCategory = {
   fsq_category_id: string;
   name: string;
@@ -18,7 +30,7 @@ type FoursquareLocation = {
   formatted_address?: string;
 };
 
-type FoursquarePlace = {
+export type FoursquarePlace = {
   categories?: FoursquareCategory[];
   distance?: number;
   email?: string;
