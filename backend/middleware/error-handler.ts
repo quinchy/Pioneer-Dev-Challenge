@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../utils/app-error";
+import { sendResponse } from "../utils/send-response";
 
 export function errorHandler(
   err: Error,
@@ -8,24 +9,32 @@ export function errorHandler(
   _next: NextFunction,
 ) {
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      success: false,
-      message: err.message,
-      error: {
-        code: err.code,
-        detail: err.detail,
+    return sendResponse(
+      res,
+      err.statusCode,
+      false,
+      err.message,
+      {
+        error: {
+          code: err.code,
+          detail: err.detail,
+        },
       },
-    });
+    );
   }
 
   console.error("Unexpected error:", err);
 
-  return res.status(500).json({
-    success: false,
-    message: "An unexpected error occurred.",
-    error: {
-      code: "INTERNAL_SERVER_ERROR",
-      detail: err instanceof Error ? err.message : undefined,
+  return sendResponse(
+    res,
+    500,
+    false,
+    "An unexpected error occurred.",
+    {
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        detail: err instanceof Error ? err.message : undefined,
+      },
     },
-  });
+  );
 }

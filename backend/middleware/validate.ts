@@ -1,20 +1,24 @@
 import type { Request, Response, NextFunction } from "express";
 import { z } from "zod";
+import { sendResponse } from "../utils/send-response";
 
 export function validate(schema: z.ZodSchema) {
   return (req: Request, res: Response, next: NextFunction) => {
     const result = schema.safeParse(req.query);
 
     if (!result.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid query parameters",
-        error: {
-          code: "VALIDATION_ERROR",
-          detail: "Query validation failed.",
+      return sendResponse(
+        res,
+        400,
+        false,
+        "Invalid query parameters",
+        {
+          error: {
+            code: "VALIDATION_ERROR",
+            detail: "Query validation failed.",
+          },
         },
-        errors: result.error.issues,
-      });
+      );
     }
 
     req.validatedQuery = result.data as Record<string, unknown>;
