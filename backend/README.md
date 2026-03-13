@@ -49,7 +49,7 @@ Start the HTTP server:
 
 ```bash
 cd backend
-bun run server.ts
+bun run dev
 ```
 
 The API will listen on `http://localhost:<PORT>` (default `http://localhost:3001`).
