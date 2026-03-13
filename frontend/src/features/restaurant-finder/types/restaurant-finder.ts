@@ -1,14 +1,10 @@
 import { z } from "zod";
 
 export const restaurantFinderSchema = z.object({
-  message: z.string().min(1, "Message is required"),
+  message: z.string().min(1, "Tell us what you're craving first."),
 });
 
 export type RestaurantFinderFormData = z.infer<typeof restaurantFinderSchema>;
-
-export type RestaurantFinderFormDataWithMessage = {
-  message: string;
-};
 
 type FoursquareCategory = {
   fsq_category_id: string;
@@ -55,7 +51,7 @@ export type FindRestaurantsSuccessResponse = {
   };
 };
 
-export type ApiError = {
+export type ExecuteApiError = {
   success: false;
   message: string;
   error: {
@@ -72,4 +68,4 @@ export type ExecuteApiSuccess = {
   };
 };
 
-export type ExecuteApiResponse = ExecuteApiSuccess | ApiError;
+export type ExecuteApiResponse = ExecuteApiSuccess | ExecuteApiError;
