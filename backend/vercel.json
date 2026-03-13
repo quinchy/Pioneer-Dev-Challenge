@@ -1,15 +1,14 @@
 {
     "buildCommand": "bun run build",
-    "functions": {
-      "dist/server.js": {
-        "runtime": "nodejs20.x",
-        "includeFiles": "dist/**"
-      }
-    },
     "routes": [
       {
         "src": "/(.*)",
         "dest": "dist/server.js"
       }
-    ]
+    ],
+    "functions": {
+      "dist/server.js": {
+        "includeFiles": "dist/**"
+      }
+    }
   }
