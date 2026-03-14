@@ -97,21 +97,13 @@ cd backend
 bun run test
 ```
 
-**Testing**
+The suite focuses on the most important behavior:
 
-- **Validation of the `code` parameter**
-  - `middleware/auth.test.ts` – ensures `code` must equal `API_CODE` and returns `401` when invalid.
-- **Parsing / validation of structured search parameters**
-  - `validation/openai.test.ts` – tests the schema for parsed search parameters (price range, sort, etc.).
-  - `validation/execute.test.ts` – validates the `message` query for the `/api/execute` endpoint.
-- **Backend validation and error handling**
-  - `validation/env.test.ts` – validates required environment variables and defaults.
-  - `middleware/validate.test.ts` – checks query validation and the 400 response shape.
-  - `middleware/error-handler.test.ts` – verifies `AppError` and unknown errors produce the correct JSON error responses.
-- **Foursquare result behavior**
-  - `services/foursquare.service.test.ts` – covers happy-path parsing of Foursquare results and error handling when the upstream API fails.
-- **Main request flow**
-  - `controllers/execute.controller.test.ts` – exercises the controller that parses the message and calls the Foursquare service, asserting a `200` success response.
+- **`validation/execute.test.ts`** – Query validation for `/api/execute`: accepts a valid `message`, rejects empty or missing `message`.
+- **`validation/openai.test.ts`** – Schema for parsed search params: valid payloads, price-range rules (e.g. `min_price` cannot exceed `max_price`), and allowed `sort`/`fields`.
+- **`validation/env.test.ts`** – Environment config: test fallbacks when `NODE_ENV` is `test`, and use of provided env vars (e.g. `PORT`, `API_CODE`, API keys).
+- **`services/foursquare.service.test.ts`** – Foursquare integration: building the correct request (URL, headers, params), mapping the response to the returned array, and error handling when the upstream API fails.
+- **`controllers/execute.controller.test.ts`** – Main flow: success path (parse message → call Foursquare → return 200 with restaurant data) and forwarding errors to `next` when parsing or Foursquare fails.
 
 **Filtering / transformation of Foursquare results**
 
