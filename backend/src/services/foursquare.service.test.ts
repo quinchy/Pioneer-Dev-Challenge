@@ -56,7 +56,7 @@ describe("findRestaurants", () => {
 
     expect(fetch).toHaveBeenCalledTimes(1);
 
-    const [url, options] = vi.mocked(fetch).mock.calls[0];
+    const [url, options] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
 
     expect(url).toContain("https://places-api.foursquare.com/places/search?");
     expect(url).toContain("query=sushi");
