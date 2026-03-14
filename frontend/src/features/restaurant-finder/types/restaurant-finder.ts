@@ -38,17 +38,6 @@ export type FoursquarePlace = {
 
 export type FindRestaurantsSuccessResponse = {
   results: FoursquarePlace[];
-  context?: {
-    geo_bounds?: {
-      circle?: {
-        center?: {
-          latitude: number;
-          longitude: number;
-        };
-        radius: number;
-      };
-    };
-  };
 };
 
 export type ExecuteApiError = {
