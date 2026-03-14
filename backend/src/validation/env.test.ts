@@ -1,50 +1,83 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { z } from "zod";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-describe("env validation", () => {
-  const originalEnv = { ...process.env };
+describe("env", () => {
+  const originalEnv = process.env;
 
   beforeEach(() => {
+    vi.resetModules();
     process.env = { ...originalEnv };
   });
 
-  it("should require all required environment variables", () => {
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it("uses test fallbacks when NODE_ENV is test", async () => {
+    process.env.NODE_ENV = "test";
     delete process.env.API_CODE;
     delete process.env.OPENAI_API_KEY;
     delete process.env.FOURSQUARE_API_KEY;
     delete process.env.CORS_ORIGIN;
+    delete process.env.OPENAI_MODEL;
+    delete process.env.PORT;
 
-    expect(() => {
-      const envSchema = z.object({
-        API_CODE: z.string().min(1),
-        OPENAI_API_KEY: z.string().min(1),
-        FOURSQUARE_API_KEY: z.string().min(1),
-        CORS_ORIGIN: z.string().min(1),
-      });
+    const { env } = await import("./env");
 
-      envSchema.parse(process.env);
-    }).toThrow();
+    expect(env).toEqual({
+      PORT: 3001,
+      API_CODE: "test-api-code",
+      OPENAI_API_KEY: "test-openai-api-key",
+      OPENAI_MODEL: "gpt-4.1-mini",
+      FOURSQUARE_API_KEY: "test-foursquare-api-key",
+      CORS_ORIGIN: "http://localhost:3000",
+    });
   });
 
-  it("should use default values for optional fields", () => {
-    process.env.API_CODE = "test-code";
-    process.env.OPENAI_API_KEY = "test-key";
-    process.env.FOURSQUARE_API_KEY = "test-fs-key";
-    process.env.CORS_ORIGIN = "http://localhost:3000";
+  it("uses provided environment variables when present", async () => {
+    process.env.NODE_ENV = "test";
+    process.env.PORT = "5000";
+    process.env.API_CODE = "real-api-code";
+    process.env.OPENAI_API_KEY = "real-openai-key";
+    process.env.OPENAI_MODEL = "gpt-5";
+    process.env.FOURSQUARE_API_KEY = "real-foursquare-key";
+    process.env.CORS_ORIGIN = "https://example.com";
 
-    const envSchema = z.object({
-      PORT: z.coerce.number().default(3001),
-      API_CODE: z.string().min(1),
-      OPENAI_API_KEY: z.string().min(1),
-      OPENAI_MODEL: z.string().min(1).default("gpt-4.1-mini"),
-      FOURSQUARE_API_KEY: z.string().min(1),
-      CORS_ORIGIN: z.string().min(1),
+    const { env } = await import("./env");
+
+    expect(env).toEqual({
+      PORT: 5000,
+      API_CODE: "real-api-code",
+      OPENAI_API_KEY: "real-openai-key",
+      OPENAI_MODEL: "gpt-5",
+      FOURSQUARE_API_KEY: "real-foursquare-key",
+      CORS_ORIGIN: "https://example.com",
     });
+  });
 
-    const result = envSchema.parse(process.env);
+  it("throws when required variables are missing outside test environment", async () => {
+    process.env.NODE_ENV = "production";
+    delete process.env.API_CODE;
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.FOURSQUARE_API_KEY;
+    delete process.env.CORS_ORIGIN;
+    delete process.env.OPENAI_MODEL;
+    delete process.env.PORT;
 
-    expect(result.PORT).toBe(3001);
-    expect(result.OPENAI_MODEL).toBe("gpt-4.1-mini");
-    expect(result.CORS_ORIGIN).toBe("http://localhost:3000");
+    await expect(import("./env")).rejects.toThrow();
+  });
+
+  it("applies default values for PORT and OPENAI_MODEL", async () => {
+    process.env.NODE_ENV = "test";
+    process.env.API_CODE = "real-api-code";
+    process.env.OPENAI_API_KEY = "real-openai-key";
+    process.env.FOURSQUARE_API_KEY = "real-foursquare-key";
+    process.env.CORS_ORIGIN = "https://example.com";
+    delete process.env.PORT;
+    delete process.env.OPENAI_MODEL;
+
+    const { env } = await import("./env");
+
+    expect(env.PORT).toBe(3001);
+    expect(env.OPENAI_MODEL).toBe("gpt-4.1-mini");
   });
 });
