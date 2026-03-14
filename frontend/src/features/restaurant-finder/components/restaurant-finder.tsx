@@ -19,9 +19,7 @@ export default function RestaurantFinder() {
   const successResult = result?.success ? result : null;
   const errorResult = result && !result.success ? result : null;
 
-  const restaurants = successResult?.data.restaurants;
-  const restaurantItems = restaurants?.results ?? [];
-
+  const restaurantItems = successResult?.data.restaurants ?? [];
   const isInitial = !isLoading && result === null;
   const hasError = !isLoading && errorResult !== null;
   const hasData = !isLoading && restaurantItems.length > 0;
@@ -48,7 +46,7 @@ export default function RestaurantFinder() {
             />
           }
           noDataUI={<RestaurantNoList />}
-          dataUI={<RestaurantFoundList restaurants={restaurants} />}
+          dataUI={<RestaurantFoundList restaurants={restaurantItems} />}
         />
       </div>
     </>

@@ -36,10 +36,6 @@ export type FoursquarePlace = {
   website?: string;
 };
 
-export type FindRestaurantsSuccessResponse = {
-  results: FoursquarePlace[];
-};
-
 export type ExecuteApiError = {
   success: false;
   message: string;
@@ -53,7 +49,7 @@ export type ExecuteApiSuccess = {
   success: true;
   message: string;
   data: {
-    restaurants: FindRestaurantsSuccessResponse;
+    restaurants: FoursquarePlace[];
   };
 };
 

@@ -1,7 +1,4 @@
-import {
-  type FindRestaurantsSuccessResponse,
-  type FoursquarePlace,
-} from "@/features/restaurant-finder/types/restaurant-finder";
+import type { FoursquarePlace } from "@/features/restaurant-finder/types/restaurant-finder";
 import {
   Card,
   CardHeader,
@@ -172,11 +169,11 @@ export function RestaurantNoList() {
 export function RestaurantFoundList({
   restaurants,
 }: {
-  restaurants?: FindRestaurantsSuccessResponse;
+  restaurants?: FoursquarePlace[];
 }) {
   return (
     <div className="grid gap-4">
-      {restaurants?.results.map((restaurant, index) => (
+      {restaurants?.map((restaurant, index) => (
         <RestaurantCard key={index} restaurant={restaurant} />
       ))}
     </div>
