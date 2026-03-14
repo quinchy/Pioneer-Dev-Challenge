@@ -113,6 +113,13 @@ bun run test
 - **Main request flow**
   - `controllers/execute.controller.test.ts` – exercises the controller that parses the message and calls the Foursquare service, asserting a `200` success response.
 
+**Filtering / transformation of Foursquare results**
+
+I shape the Foursquare response by using the Places Search API’s `fields` query parameter. In the OpenAI prompt I instruct the model to set `fields` to only the response fields we want: `name`, `location`, `categories`, `distance`, `tel`, `website`. Those are then sent to Foursquare so the API returns only that data (per their docs, if no fields are specified, all Pro fields are returned by default). Furthermore, once we obtain
+the data, we will only return the data.restaurants from the findRestaurants service function so on execute api we only return the array of restaurants 
+
+Relevance is further handled by the other search params (query, near, open_now, price range, sort). The Foursquare service tests cover success and error paths and that the response is passed through correctly; they do not assert the exact `fields` list because that is driven by the parsed LLM output and validated by the openai schema tests.
+
 ---
 
 ## Backend structure (high level)
