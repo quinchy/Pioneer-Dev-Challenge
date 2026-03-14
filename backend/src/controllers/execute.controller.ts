@@ -29,4 +29,3 @@ export const parseMessageAndFindRestaurants = async (
     next(error);
   }
 };
-
