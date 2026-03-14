@@ -1,9 +1,10 @@
-import type { Request, Response, NextFunction } from "express";
+import type { Response, NextFunction } from "express";
 import { z } from "zod";
 import { sendResponse } from "../utils/send-response";
+import type { ExecuteRequest } from "../types/execute";
 
 export function validate(schema: z.ZodSchema) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: ExecuteRequest, res: Response, next: NextFunction) => {
     const result = schema.safeParse(req.query);
 
     if (!result.success) {
@@ -21,16 +22,6 @@ export function validate(schema: z.ZodSchema) {
       );
     }
 
-    req.validatedQuery = result.data as Record<string, unknown>;
     next();
   };
-}
-
-// Extend Express Request type to include validated query
-declare global {
-  namespace Express {
-    interface Request {
-      validatedQuery?: Record<string, unknown>;
-    }
-  }
 }
