@@ -30,13 +30,14 @@ type FoursquarePlace = {
 
 export type FoursquareSuccessResponse = {
   results: FoursquarePlace[];
+};
+
+export type FoursquareRawSuccessResponse = {
+  results: FoursquarePlace[];
   context?: {
     geo_bounds?: {
       circle?: {
-        center?: {
-          latitude: number;
-          longitude: number;
-        };
+        center?: { latitude: number; longitude: number };
         radius: number;
       };
     };

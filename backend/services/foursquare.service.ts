@@ -3,6 +3,7 @@ import { AppError } from "../utils/app-error";
 import type { ParseMessageParams } from "../validation/openai";
 import type {
   FoursquareSuccessResponse,
+  FoursquareRawSuccessResponse,
   FoursquareErrorResponse,
 } from "../types/foursquare";
 
@@ -44,7 +45,7 @@ export async function findRestaurants(params: ParseMessageParams) {
     });
 
     const data = (await response.json()) as
-      | FoursquareSuccessResponse
+      | FoursquareRawSuccessResponse
       | FoursquareErrorResponse;
 
     if (!response.ok) {
@@ -61,7 +62,9 @@ export async function findRestaurants(params: ParseMessageParams) {
       );
     }
 
-    return data as FoursquareSuccessResponse;
+    const successData = (data as FoursquareRawSuccessResponse).results;
+    
+    return successData;
   } catch (error) {
     if (error instanceof AppError) {
       throw error;
