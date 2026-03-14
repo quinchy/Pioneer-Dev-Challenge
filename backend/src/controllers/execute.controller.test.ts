@@ -1,74 +1,127 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Request, Response, NextFunction } from "express";
+import type { Response, NextFunction } from "express";
 import { parseMessageAndFindRestaurants } from "./execute.controller";
-import * as openaiService from "../services/openai.service";
-import * as foursquareService from "../services/foursquare.service";
+import { parseMessage } from "../services/openai.service";
+import { findRestaurants } from "../services/foursquare.service";
+import { sendResponse } from "../utils/send-response";
+import type { ParseMessageParams } from "../validation/openai";
+import type { ExecuteRequest } from "../types/execute";
 
-describe("parseMessageAndFindRestaurants controller", () => {
-  const mockRequest = () =>
-    ({
-      validatedQuery: { message: "Find pizza in NYC" },
-    }) as unknown as Request;
+vi.mock("../services/openai.service", () => ({
+  parseMessage: vi.fn(),
+}));
 
-  const mockResponse = () => {
-    const res = {} as Response;
-    res.status = vi.fn().mockReturnValue(res);
-    res.json = vi.fn().mockReturnValue(res);
-    return res;
-  };
+vi.mock("../services/foursquare.service", () => ({
+  findRestaurants: vi.fn(),
+}));
 
-  let next: NextFunction;
+vi.mock("../utils/send-response", () => ({
+  sendResponse: vi.fn(),
+}));
 
+describe("parseMessageAndFindRestaurants", () => {
   beforeEach(() => {
-    vi.restoreAllMocks();
-    next = vi.fn();
+    vi.clearAllMocks();
   });
 
-  it("should parse the message, find restaurants and return 200 with data", async () => {
-    const req = mockRequest();
-    const res = mockResponse();
+  it("returns 200 with restaurant results for a valid message", async () => {
+    const req = {
+      query: {
+        message: "Find me cheap sushi in Makati",
+        code: "pioneerdevai",
+      },
+    } as ExecuteRequest;
 
-    vi.spyOn(openaiService, "parseMessage").mockResolvedValue({
-      query: "pizza",
-      near: "NYC",
-      min_price: null,
-      max_price: null,
+    const res = {} as Response;
+    const next = vi.fn() as NextFunction;
+
+    const parsedMessage: ParseMessageParams = {
+      query: "sushi",
+      near: "Makati",
+      min_price: 1,
+      max_price: 2,
       open_now: false,
       tel_format: null,
       sort: "RELEVANCE",
-      fields: [],
-    } as any);
+      fields: ["name", "location", "categories", "distance", "tel", "website"],
+    };
 
-    const mockRestaurants = { results: [{ id: "1", name: "Pizza Place" }] };
-    vi.spyOn(foursquareService, "findRestaurants").mockResolvedValue(
-      mockRestaurants as any,
-    );
+    const restaurants = [{ name: "Sushi Place 1" }, { name: "Sushi Place 2" }];
+
+    vi.mocked(parseMessage).mockResolvedValue(parsedMessage);
+    vi.mocked(findRestaurants).mockResolvedValue(restaurants);
 
     await parseMessageAndFindRestaurants(req, res, next);
 
-    expect(openaiService.parseMessage).toHaveBeenCalledWith("Find pizza in NYC");
-    expect(foursquareService.findRestaurants).toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      success: true,
-      message: "Restaurant search completed successfully.",
-      data: {
-        restaurants: mockRestaurants,
+    expect(parseMessage).toHaveBeenCalledWith("Find me cheap sushi in Makati");
+    expect(findRestaurants).toHaveBeenCalledWith(parsedMessage);
+    expect(sendResponse).toHaveBeenCalledWith(
+      res,
+      200,
+      true,
+      "Restaurant search completed successfully.",
+      {
+        data: {
+          restaurants,
+        },
       },
-    });
+    );
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("should call next with error when something throws", async () => {
-    const req = mockRequest();
-    const res = mockResponse();
-    const error = new Error("boom");
+  it("calls next with an error when parseMessage fails", async () => {
+    const req = {
+      query: {
+        message: "Find me cheap sushi in Makati",
+        code: "pioneerdevai",
+      },
+    } as ExecuteRequest;
 
-    vi.spyOn(openaiService, "parseMessage").mockRejectedValue(error);
+    const res = {} as Response;
+    const next = vi.fn() as NextFunction;
+    const error = new Error("Parse failed");
+
+    vi.mocked(parseMessage).mockRejectedValue(error);
 
     await parseMessageAndFindRestaurants(req, res, next);
 
+    expect(parseMessage).toHaveBeenCalledWith("Find me cheap sushi in Makati");
+    expect(findRestaurants).not.toHaveBeenCalled();
+    expect(sendResponse).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith(error);
+  });
+
+  it("calls next with an error when findRestaurants fails", async () => {
+    const req = {
+      query: {
+        message: "Find me cheap sushi in Makati",
+        code: "pioneerdevai",
+      },
+    } as ExecuteRequest;
+
+    const res = {} as Response;
+    const next = vi.fn() as NextFunction;
+    const error = new Error("Foursquare failed");
+
+    const parsedMessage: ParseMessageParams = {
+      query: "sushi",
+      near: "Makati",
+      min_price: 1,
+      max_price: 2,
+      open_now: false,
+      tel_format: null,
+      sort: "RELEVANCE",
+      fields: ["name", "location", "categories", "distance", "tel", "website"],
+    };
+
+    vi.mocked(parseMessage).mockResolvedValue(parsedMessage);
+    vi.mocked(findRestaurants).mockRejectedValue(error);
+
+    await parseMessageAndFindRestaurants(req, res, next);
+
+    expect(parseMessage).toHaveBeenCalledWith("Find me cheap sushi in Makati");
+    expect(findRestaurants).toHaveBeenCalledWith(parsedMessage);
+    expect(sendResponse).not.toHaveBeenCalled();
     expect(next).toHaveBeenCalledWith(error);
   });
 });
-

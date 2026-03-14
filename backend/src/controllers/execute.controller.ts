@@ -2,15 +2,15 @@ import type { Request, Response, NextFunction } from "express";
 import { parseMessage } from "../services/openai.service";
 import { findRestaurants } from "../services/foursquare.service";
 import { sendResponse } from "../utils/send-response";
+import type { ExecuteRequest } from "../types/execute";
 
-// Parses the incoming message and then finds matching restaurants.
 export const parseMessageAndFindRestaurants = async (
-  req: Request,
+  req: ExecuteRequest,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    const { message } = req.validatedQuery as { message: string };
+    const message = req.query.message;
     const parsedMessage = await parseMessage(message);
     const restaurants = await findRestaurants(parsedMessage);
 
